@@ -49,6 +49,7 @@ namespace AutoKeyboardClick
         AutoItX3 au3 = new AutoItX3();
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
 
+        private int activateKeyPress;
 
         private void LoadKeyInputs()
         {
@@ -99,11 +100,27 @@ namespace AutoKeyboardClick
             keys_to_direct_input.Add('/', 0x35001);
         }
 
+        private void Init()
+        {
+            this.activateKeyPress = 0x3B;
+
+            LoadKeyInputs();
+
+            foreach (KeyValuePair<char, int> entry in keys_to_direct_input)
+            {
+                cbKeys.Items.Add(entry.Key);
+            }
+
+            cbSpecial.SelectedIndex = 0;
+            cbStartStop.SelectedIndex = 0;
+            lblFound.Text = "";
+        }
+
         public Form1()
         {
             InitializeComponent();
 
-            LoadKeyInputs();
+            Init();
         }
 
         private void btnFind_Click(object sender, EventArgs e)
@@ -117,32 +134,45 @@ namespace AutoKeyboardClick
 
             for (int i = 0; (i < 60) && (zero == IntPtr.Zero); i++)
             {
-                Thread.Sleep(500);
                 zero = FindWindow(null, name);
-                lblMessage.Text = zero + "";
             }
 
             if (zero != IntPtr.Zero)
             {
+                lblFound.Text = zero + "";
+                /*
                 const int VK_F5 = 0x47;
 
+                
                 PostMessage(zero, WM_KEYDOWN, VK_F5, 0x2F0001);
                 
                 Thread.Sleep(100);
 
                 PostMessage(zero, WM_KEYUP, VK_F5, 0x2F0001);
-
-                //lblMessage.Text = "ID: " + zero;
-                //SetForegroundWindow(zero);
-                //au3.Send("g");
-                //AutoItX.Send("g");
-                //SendKeys.SendWait("{k}");
-                //SendKeys.SendWait("{TAB}");
-                //SendKeys.SendWait("{TAB}");
-                //SendKeys.SendWait("{ENTER}");
-                //SendKeys.SendWait("g");
-                //SendKeys.Flush();
+                */
             }
+            else
+            {
+                lblFound.Text = "Can't Find";
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            int keyCode = 0x3B; // F1
+
+            keyCode += cbStartStop.SelectedIndex;
+
+            if (keyCode <= 0x44) // F10
+                this.activateKeyPress = keyCode;
+
+            lblTest.Text = keyCode + "";
+
         }
     }
 }
