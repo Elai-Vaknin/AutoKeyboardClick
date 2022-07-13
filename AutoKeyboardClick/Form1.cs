@@ -50,59 +50,67 @@ namespace AutoKeyboardClick
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
 
         private int activateKeyPress;
+        private bool pressing;
+        private IntPtr selectedWindow;
+        private int delay;
+        private int repeats;
 
         private void LoadKeyInputs()
         {
-            keys_to_direct_input.Add('1', 0x02001);
-            keys_to_direct_input.Add('2', 0x03001);
-            keys_to_direct_input.Add('3', 0x04001);
-            keys_to_direct_input.Add('4', 0x05001);
-            keys_to_direct_input.Add('5', 0x06001);
-            keys_to_direct_input.Add('6', 0x07001);
-            keys_to_direct_input.Add('7', 0x08001);
-            keys_to_direct_input.Add('8', 0x09001);
-            keys_to_direct_input.Add('9', 0x0A001);
-            keys_to_direct_input.Add('0', 0x0B001);
-            keys_to_direct_input.Add('-', 0x0C001);
-            keys_to_direct_input.Add('=', 0x0D001);
-            keys_to_direct_input.Add('Q', 0x10001);
-            keys_to_direct_input.Add('W', 0x11001);
-            keys_to_direct_input.Add('E', 0x12001);
-            keys_to_direct_input.Add('R', 0x13001);
-            keys_to_direct_input.Add('T', 0x14001);
-            keys_to_direct_input.Add('Y', 0x15001);
-            keys_to_direct_input.Add('U', 0x16001);
-            keys_to_direct_input.Add('I', 0x17001);
-            keys_to_direct_input.Add('O', 0x18001);
-            keys_to_direct_input.Add('P', 0x19001);
-            keys_to_direct_input.Add('[', 0x1A001);
-            keys_to_direct_input.Add(']', 0x1B001);
-            keys_to_direct_input.Add('A', 0x1E001);
-            keys_to_direct_input.Add('S', 0x1F001);
-            keys_to_direct_input.Add('D', 0x20001);
-            keys_to_direct_input.Add('F', 0x21001);
-            keys_to_direct_input.Add('G', 0x22001);
-            keys_to_direct_input.Add('H', 0x23001);
-            keys_to_direct_input.Add('J', 0x24001);
-            keys_to_direct_input.Add('K', 0x25001);
-            keys_to_direct_input.Add('L', 0x26001);
-            keys_to_direct_input.Add(';', 0x27001);
-            keys_to_direct_input.Add('`', 0x29001);
-            keys_to_direct_input.Add('Z', 0x2C001);
-            keys_to_direct_input.Add('X', 0x2D001);
-            keys_to_direct_input.Add('C', 0x2E001);
-            keys_to_direct_input.Add('V', 0x2F001);
-            keys_to_direct_input.Add('B', 0x30001);
-            keys_to_direct_input.Add('N', 0x31001);
-            keys_to_direct_input.Add('M', 0x32001);
-            keys_to_direct_input.Add(',', 0x33001);
-            keys_to_direct_input.Add('.', 0x34001);
-            keys_to_direct_input.Add('/', 0x35001);
+            keys_to_direct_input.Add('1', 0x020001);
+            keys_to_direct_input.Add('2', 0x030001);
+            keys_to_direct_input.Add('3', 0x040001);
+            keys_to_direct_input.Add('4', 0x050001);
+            keys_to_direct_input.Add('5', 0x060001);
+            keys_to_direct_input.Add('6', 0x070001);
+            keys_to_direct_input.Add('7', 0x080001);
+            keys_to_direct_input.Add('8', 0x090001);
+            keys_to_direct_input.Add('9', 0x0A0001);
+            keys_to_direct_input.Add('0', 0x0B0001);
+            keys_to_direct_input.Add('-', 0x0C0001);
+            keys_to_direct_input.Add('=', 0x0D0001);
+            keys_to_direct_input.Add('Q', 0x100001);
+            keys_to_direct_input.Add('W', 0x110001);
+            keys_to_direct_input.Add('E', 0x120001);
+            keys_to_direct_input.Add('R', 0x130001);
+            keys_to_direct_input.Add('T', 0x140001);
+            keys_to_direct_input.Add('Y', 0x150001);
+            keys_to_direct_input.Add('U', 0x160001);
+            keys_to_direct_input.Add('I', 0x170001);
+            keys_to_direct_input.Add('O', 0x180001);
+            keys_to_direct_input.Add('P', 0x190001);
+            keys_to_direct_input.Add('[', 0x1A0001);
+            keys_to_direct_input.Add(']', 0x1B0001);
+            keys_to_direct_input.Add('A', 0x1E0001);
+            keys_to_direct_input.Add('S', 0x1F0001);
+            keys_to_direct_input.Add('D', 0x200001);
+            keys_to_direct_input.Add('F', 0x210001);
+            keys_to_direct_input.Add('G', 0x220001);
+            keys_to_direct_input.Add('H', 0x230001);
+            keys_to_direct_input.Add('J', 0x240001);
+            keys_to_direct_input.Add('K', 0x250001);
+            keys_to_direct_input.Add('L', 0x260001);
+            keys_to_direct_input.Add(';', 0x270001);
+            keys_to_direct_input.Add('`', 0x290001);
+            keys_to_direct_input.Add('Z', 0x2C0001);
+            keys_to_direct_input.Add('X', 0x2D0001);
+            keys_to_direct_input.Add('C', 0x2E0001);
+            keys_to_direct_input.Add('V', 0x2F0001);
+            keys_to_direct_input.Add('B', 0x300001);
+            keys_to_direct_input.Add('N', 0x310001);
+            keys_to_direct_input.Add('M', 0x320001);
+            keys_to_direct_input.Add(',', 0x330001);
+            keys_to_direct_input.Add('.', 0x340001);
+            keys_to_direct_input.Add('/', 0x350001);
         }
 
         private void Init()
         {
             this.activateKeyPress = 0x3B;
+            this.pressing = false;
+            this.selectedWindow = IntPtr.Zero;
+            this.repeats = 10;
+            this.delay = 500;
 
             LoadKeyInputs();
 
@@ -140,15 +148,11 @@ namespace AutoKeyboardClick
             if (zero != IntPtr.Zero)
             {
                 lblFound.Text = zero + "";
+
+                selectedWindow = zero;
+
                 /*
-                const int VK_F5 = 0x47;
-
                 
-                PostMessage(zero, WM_KEYDOWN, VK_F5, 0x2F0001);
-                
-                Thread.Sleep(100);
-
-                PostMessage(zero, WM_KEYUP, VK_F5, 0x2F0001);
                 */
             }
             else
@@ -173,6 +177,50 @@ namespace AutoKeyboardClick
 
             lblTest.Text = keyCode + "";
 
+        }
+
+        private void reset()
+        {
+            pressing = false;
+
+            btnStart.Enabled = true;
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (this.selectedWindow == null)
+                return;
+
+            pressing = true;
+
+            btnStart.Enabled = false;
+
+            char selectedKey = cbKeys.SelectedItem.ToString()[0];
+
+            int value = 0;
+
+            keys_to_direct_input.TryGetValue(selectedKey, out value);
+
+            if (value == 0)
+                return;
+
+            for (int i = 0; i < this.repeats; i++)
+            {
+                PostMessage(this.selectedWindow, WM_KEYDOWN, (int)selectedKey, value);
+
+                Thread.Sleep(10);
+
+                PostMessage(this.selectedWindow, WM_KEYUP, (int)selectedKey, value);
+
+                Thread.Sleep(this.delay);
+            }
+
+            reset();
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            reset();
         }
     }
 }

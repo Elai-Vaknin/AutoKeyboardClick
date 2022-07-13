@@ -51,7 +51,7 @@
             this.lblRepeats = new System.Windows.Forms.Label();
             this.lblInfinite = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnFind
@@ -272,22 +272,24 @@
             this.btnStart.TabIndex = 23;
             this.btnStart.Text = "Start key pressing";
             this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
-            // button1
+            // btnStop
             // 
-            this.button1.Location = new System.Drawing.Point(127, 145);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(104, 34);
-            this.button1.TabIndex = 24;
-            this.button1.Text = "Stop key pressing";
-            this.button1.UseVisualStyleBackColor = true;
+            this.btnStop.Location = new System.Drawing.Point(127, 145);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(104, 34);
+            this.btnStop.TabIndex = 24;
+            this.btnStop.Text = "Stop key pressing";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(601, 208);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnStop);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.lblInfinite);
             this.Controls.Add(this.textBox4);
@@ -344,7 +346,7 @@
         private System.Windows.Forms.Label lblRepeats;
         private System.Windows.Forms.Label lblInfinite;
         private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnStop;
     }
 }
 
