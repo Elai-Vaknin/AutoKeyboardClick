@@ -5,34 +5,12 @@ using AutoItX3Lib;
 using AutoIt;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace AutoKeyboardClick
 {       
     public partial class Form1 : Form
     {
-        public const int WM_KEYDOWN = 0x100;
-        public const int WM_KEYUP = 0x101;
-        public const int WM_CHAR = 0x0102;
-        public const int WM_COMMAND = 0x111;
-        public const int WM_LBUTTONDOWN = 0x201;
-        public const int WM_LBUTTONUP = 0x202;
-        public const int WM_LBUTTONDBLCLK = 0x203;
-        public const int WM_RBUTTONDOWN = 0x204;
-        public const int WM_RBUTTONUP = 0x205;
-        public const int WM_RBUTTONDBLCLK = 0x206;
-
-
-        [DllImport("User32.dll")]
-        public static extern int FindWindowEx(
-            int hwndParent,
-            int hwndChildAfter,
-            string strClassName,
-            string strWindowName);
-
-
-        // The SendMessage function sends the specified message to a window or windows. 
-        // It calls the window procedure for the specified window and does not return
-        // until the window procedure has processed the message. 
         [DllImport("User32.dll")]
         static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
 
@@ -45,15 +23,48 @@ namespace AutoKeyboardClick
         [DllImport("user32.dll")]
         static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook,
+        LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode,
+            IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
 
         AutoItX3 au3 = new AutoItX3();
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
 
-        private int activateKeyPress;
-        private bool pressing;
-        private IntPtr selectedWindow;
+
+
         private int delay;
         private int repeats;
+        private int activateKeyPress;
+       
+        private IntPtr selectedWindow;
+        private IntPtr keysHook;
+
+        private char selectedKey;
+
+        private bool pressing;
+
+        private const int WH_KEYBOARD_LL = 0xD;
+        private const int WM_KEYDOWN = 0x100;
+        private const int WM_KEYUP = 0x101;
+        private const int WM_CHAR = 0x0102;
+        private const int WM_COMMAND = 0x111;
+        private const int WM_LBUTTONDOWN = 0x201;
+        private const int WM_LBUTTONUP = 0x202;
+        private const int WM_LBUTTONDBLCLK = 0x203;
+        private const int WM_RBUTTONDOWN = 0x204;
+        private const int WM_RBUTTONUP = 0x205;
+        private const int WM_RBUTTONDBLCLK = 0x206;
 
         private void LoadKeyInputs()
         {
@@ -106,11 +117,11 @@ namespace AutoKeyboardClick
 
         private void Init()
         {
-            this.activateKeyPress = 0x3B;
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.activateKeyPress = 112; // F1
             this.pressing = false;
             this.selectedWindow = IntPtr.Zero;
-            this.repeats = 10;
-            this.delay = 500;
+            this.keysHook = IntPtr.Zero;
 
             LoadKeyInputs();
 
@@ -129,6 +140,37 @@ namespace AutoKeyboardClick
             InitializeComponent();
 
             Init();
+
+            SetHook(HookCallback);
+        }
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+            {
+                int vkCode = Marshal.ReadInt32(lParam);
+
+                if(vkCode == this.activateKeyPress)
+                {
+                    if (!this.pressing)
+                        startPressing();
+                    else
+                        reset();
+                }
+            }
+            return CallNextHookEx(keysHook, nCode, wParam, lParam);
+        }
+
+        private IntPtr SetHook(LowLevelKeyboardProc proc)
+        {
+            using (Process curProcess = Process.GetCurrentProcess())
+            using (ProcessModule curModule = curProcess.MainModule)
+            {
+                return SetWindowsHookEx(WH_KEYBOARD_LL, proc,
+                    GetModuleHandle(curModule.ModuleName), 0);
+            }
         }
 
         private void btnFind_Click(object sender, EventArgs e)
@@ -150,10 +192,6 @@ namespace AutoKeyboardClick
                 lblFound.Text = zero + "";
 
                 selectedWindow = zero;
-
-                /*
-                
-                */
             }
             else
             {
@@ -168,14 +206,14 @@ namespace AutoKeyboardClick
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            int keyCode = 0x3B; // F1
+            int keyCode = 112; // F1
 
             keyCode += cbStartStop.SelectedIndex;
 
-            if (keyCode <= 0x44) // F10
+            if (keyCode <= 123) // F12
                 this.activateKeyPress = keyCode;
 
-            lblTest.Text = keyCode + "";
+            lblError.Text = keyCode + "";
 
         }
 
@@ -184,43 +222,128 @@ namespace AutoKeyboardClick
             pressing = false;
 
             btnStart.Enabled = true;
+
+            lblError.Text = "Waiting for action";
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
+        private bool validateStart()
         {
             if (this.selectedWindow == null)
+            {
+                lblError.Text = "No window is selected";
+                return false;
+            }
+
+            if (cbKeys.SelectedIndex < 0)
+            {
+                lblError.Text = "No key is selected";
+                return false;
+            }
+            if (this.delay <= 0)
+            {
+                lblError.Text = "Invalid delay";
+                return false;
+            }
+
+
+            return true;
+        }
+
+        private void pressKey(IntPtr window, int key, int lval, int delay)
+        {
+            PostMessage(this.selectedWindow, WM_KEYDOWN, key, lval);
+
+            Thread.Sleep(10);
+
+            PostMessage(this.selectedWindow, WM_KEYUP, key, lval);
+
+            Thread.Sleep(delay);
+        }
+
+        private void calculateStats()
+        {
+            try
+            {
+                int totalDelay = 0;
+
+                this.repeats = Int32.Parse(tbRepeats.Text);
+
+                totalDelay += Int32.Parse(tbMilliseconds.Text);
+                totalDelay += Int32.Parse(tbSeconds.Text) * 1000;
+                totalDelay += Int32.Parse(tbMinutes.Text) * 1000 * 60;
+
+                this.delay = totalDelay;
+                
+            }
+            catch
+            {
+                this.delay = 0;
+            }
+        }
+
+        public void threadHandler()
+        {
+            int value = 0;
+
+            keys_to_direct_input.TryGetValue(this.selectedKey, out value);
+
+            if (value == 0)
+                return;
+
+            if (this.repeats == 0)
+            {
+                while (pressing)
+                {
+                    pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
+                }
+            }
+
+            else
+            {
+                for (int i = 0; i < this.repeats; i++)
+                {
+                    pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
+                }
+            }
+
+            reset();
+        }
+
+        private void startPressing()
+        {
+            calculateStats();
+
+            if (!validateStart())
                 return;
 
             pressing = true;
 
             btnStart.Enabled = false;
 
-            char selectedKey = cbKeys.SelectedItem.ToString()[0];
+            lblError.Text = "Pressing..";
 
-            int value = 0;
+            this.selectedKey = cbKeys.SelectedItem.ToString()[0];
 
-            keys_to_direct_input.TryGetValue(selectedKey, out value);
+            Thread threadPressing = new Thread(threadHandler);
+            threadPressing.Start();
+        }
 
-            if (value == 0)
-                return;
-
-            for (int i = 0; i < this.repeats; i++)
-            {
-                PostMessage(this.selectedWindow, WM_KEYDOWN, (int)selectedKey, value);
-
-                Thread.Sleep(10);
-
-                PostMessage(this.selectedWindow, WM_KEYUP, (int)selectedKey, value);
-
-                Thread.Sleep(this.delay);
-            }
-
-            reset();
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            startPressing();
         }
 
         private void btnStop_Click(object sender, EventArgs e)
         {
             reset();
+        }
+
+        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
         }
     }
 }

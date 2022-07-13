@@ -39,15 +39,15 @@
             this.cbFound = new System.Windows.Forms.Label();
             this.lblFound = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
-            this.lblTest = new System.Windows.Forms.Label();
+            this.lblError = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lblMinutes = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.tbMinutes = new System.Windows.Forms.TextBox();
+            this.tbSeconds = new System.Windows.Forms.TextBox();
             this.lblSeconds = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.tbMilliseconds = new System.Windows.Forms.TextBox();
             this.lblMilli = new System.Windows.Forms.Label();
-            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.tbRepeats = new System.Windows.Forms.TextBox();
             this.lblRepeats = new System.Windows.Forms.Label();
             this.lblInfinite = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
@@ -83,10 +83,12 @@
             // 
             // cbKeys
             // 
+            this.cbKeys.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbKeys.FormattingEnabled = true;
             this.cbKeys.Location = new System.Drawing.Point(12, 52);
             this.cbKeys.Name = "cbKeys";
             this.cbKeys.Size = new System.Drawing.Size(121, 21);
+            this.cbKeys.Sorted = true;
             this.cbKeys.TabIndex = 4;
             // 
             // label1
@@ -100,6 +102,7 @@
             // 
             // cbSpecial
             // 
+            this.cbSpecial.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbSpecial.FormattingEnabled = true;
             this.cbSpecial.Items.AddRange(new object[] {
             "None",
@@ -123,6 +126,7 @@
             // 
             // cbStartStop
             // 
+            this.cbStartStop.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbStartStop.FormattingEnabled = true;
             this.cbStartStop.Items.AddRange(new object[] {
             "F1",
@@ -134,7 +138,9 @@
             "F7",
             "F8",
             "F9",
-            "F10"});
+            "F10",
+            "F11",
+            "F12"});
             this.cbStartStop.Location = new System.Drawing.Point(216, 23);
             this.cbStartStop.Name = "cbStartStop";
             this.cbStartStop.Size = new System.Drawing.Size(121, 21);
@@ -168,14 +174,14 @@
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
-            // lblTest
+            // lblError
             // 
-            this.lblTest.AutoSize = true;
-            this.lblTest.Location = new System.Drawing.Point(249, 156);
-            this.lblTest.Name = "lblTest";
-            this.lblTest.Size = new System.Drawing.Size(35, 13);
-            this.lblTest.TabIndex = 12;
-            this.lblTest.Text = "label3";
+            this.lblError.AutoSize = true;
+            this.lblError.Location = new System.Drawing.Point(249, 156);
+            this.lblError.Name = "lblError";
+            this.lblError.Size = new System.Drawing.Size(90, 13);
+            this.lblError.TabIndex = 12;
+            this.lblError.Text = "Waiting for action";
             // 
             // label3
             // 
@@ -196,21 +202,26 @@
             this.lblMinutes.TabIndex = 14;
             this.lblMinutes.Text = "Minutes";
             // 
-            // textBox1
+            // tbMinutes
             // 
-            this.textBox1.Location = new System.Drawing.Point(92, 107);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(55, 20);
-            this.textBox1.TabIndex = 15;
-            this.textBox1.Text = "0";
+            this.tbMinutes.Location = new System.Drawing.Point(92, 107);
+            this.tbMinutes.MaxLength = 5;
+            this.tbMinutes.Name = "tbMinutes";
+            this.tbMinutes.Size = new System.Drawing.Size(55, 20);
+            this.tbMinutes.TabIndex = 15;
+            this.tbMinutes.Tag = "";
+            this.tbMinutes.Text = "0";
+            this.tbMinutes.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox1_KeyPress);
             // 
-            // textBox2
+            // tbSeconds
             // 
-            this.textBox2.Location = new System.Drawing.Point(185, 107);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(55, 20);
-            this.textBox2.TabIndex = 17;
-            this.textBox2.Text = "0";
+            this.tbSeconds.Location = new System.Drawing.Point(185, 107);
+            this.tbSeconds.MaxLength = 5;
+            this.tbSeconds.Name = "tbSeconds";
+            this.tbSeconds.Size = new System.Drawing.Size(55, 20);
+            this.tbSeconds.TabIndex = 17;
+            this.tbSeconds.Tag = "";
+            this.tbSeconds.Text = "0";
             // 
             // lblSeconds
             // 
@@ -221,13 +232,15 @@
             this.lblSeconds.TabIndex = 16;
             this.lblSeconds.Text = "Seconds";
             // 
-            // textBox3
+            // tbMilliseconds
             // 
-            this.textBox3.Location = new System.Drawing.Point(273, 107);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(55, 20);
-            this.textBox3.TabIndex = 19;
-            this.textBox3.Text = "0";
+            this.tbMilliseconds.Location = new System.Drawing.Point(273, 107);
+            this.tbMilliseconds.MaxLength = 5;
+            this.tbMilliseconds.Name = "tbMilliseconds";
+            this.tbMilliseconds.Size = new System.Drawing.Size(55, 20);
+            this.tbMilliseconds.TabIndex = 19;
+            this.tbMilliseconds.Tag = "";
+            this.tbMilliseconds.Text = "250";
             // 
             // lblMilli
             // 
@@ -238,13 +251,15 @@
             this.lblMilli.TabIndex = 18;
             this.lblMilli.Text = "Milliseconds";
             // 
-            // textBox4
+            // tbRepeats
             // 
-            this.textBox4.Location = new System.Drawing.Point(357, 107);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(55, 20);
-            this.textBox4.TabIndex = 21;
-            this.textBox4.Text = "1";
+            this.tbRepeats.Location = new System.Drawing.Point(357, 107);
+            this.tbRepeats.MaxLength = 5;
+            this.tbRepeats.Name = "tbRepeats";
+            this.tbRepeats.Size = new System.Drawing.Size(55, 20);
+            this.tbRepeats.TabIndex = 21;
+            this.tbRepeats.Tag = "";
+            this.tbRepeats.Text = "0";
             // 
             // lblRepeats
             // 
@@ -292,16 +307,16 @@
             this.Controls.Add(this.btnStop);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.lblInfinite);
-            this.Controls.Add(this.textBox4);
+            this.Controls.Add(this.tbRepeats);
             this.Controls.Add(this.lblRepeats);
-            this.Controls.Add(this.textBox3);
+            this.Controls.Add(this.tbMilliseconds);
             this.Controls.Add(this.lblMilli);
-            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.tbSeconds);
             this.Controls.Add(this.lblSeconds);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.tbMinutes);
             this.Controls.Add(this.lblMinutes);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.lblTest);
+            this.Controls.Add(this.lblError);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.lblFound);
             this.Controls.Add(this.cbFound);
@@ -313,8 +328,11 @@
             this.Controls.Add(this.lblMessage);
             this.Controls.Add(this.tbInput);
             this.Controls.Add(this.btnFind);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Elai Free Auto Keyboard Clicker";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -334,15 +352,15 @@
         private System.Windows.Forms.Label cbFound;
         private System.Windows.Forms.Label lblFound;
         private System.Windows.Forms.Button btnSave;
-        private System.Windows.Forms.Label lblTest;
+        private System.Windows.Forms.Label lblError;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lblMinutes;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox tbMinutes;
+        private System.Windows.Forms.TextBox tbSeconds;
         private System.Windows.Forms.Label lblSeconds;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox tbMilliseconds;
         private System.Windows.Forms.Label lblMilli;
-        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.TextBox tbRepeats;
         private System.Windows.Forms.Label lblRepeats;
         private System.Windows.Forms.Label lblInfinite;
         private System.Windows.Forms.Button btnStart;
