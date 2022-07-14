@@ -67,6 +67,7 @@ namespace AutoKeyboardClick
 
         private bool pressing;
         private bool dragging;
+        private bool focused;
 
         private const int WH_KEYBOARD_LL = 0xD;
         private const int WM_KEYDOWN = 0x100;
@@ -141,7 +142,7 @@ namespace AutoKeyboardClick
             overlay.Size = new Size(10, 10);
             overlay.BackColor = Color.Black;
             overlay.Show();
-
+            
             this.StartPosition = FormStartPosition.Manual;
             this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2);
 
@@ -150,9 +151,10 @@ namespace AutoKeyboardClick
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.activateKeyPress = 112; // F1
             this.pressing = false;
+            this.focused = false;
             this.selectedWindow = IntPtr.Zero;
             this.keysHook = IntPtr.Zero;
-
+            
             LoadKeyInputs();
 
             foreach (KeyValuePair<char, int> entry in keys_to_direct_input)
@@ -385,7 +387,7 @@ namespace AutoKeyboardClick
 
             overlay.setDropLocation(p);
         }
-
+        /*
         public static bool ApplicationIsActivated()
         {
             var activatedHandle = GetForegroundWindow();
@@ -400,16 +402,15 @@ namespace AutoKeyboardClick
 
             return activeProcId == procId;
         }
-
+        */
         delegate void SetTextCallback(bool visible);
 
         public void threadTest()
         {
             while (true)
             {
-                bool visible = ApplicationIsActivated();
-
-                changeVisibility(visible);
+                changeVisibility((this.focused || overlay.isFocused()));
+                Thread.Sleep(25);
             }
         }
 
@@ -424,6 +425,16 @@ namespace AutoKeyboardClick
             {
                 overlay.Visible = visible;
             }
+        }
+
+        private void Form1_Activated(object sender, EventArgs e)
+        {
+            this.focused = true;
+        }
+
+        private void Form1_Deactivate(object sender, EventArgs e)
+        {
+            this.focused = false;
         }
     }
 }

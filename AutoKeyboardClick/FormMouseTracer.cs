@@ -13,6 +13,7 @@ namespace AutoKeyboardClick
     public partial class FormMouseTracer : Form
     {
         private bool dragging;
+        private bool focused;
 
         private int originalX;
         private int originalY;
@@ -32,6 +33,11 @@ namespace AutoKeyboardClick
         public void setDropLocation(Point p)
         {
             this.dropLocation = p;
+        }
+
+        public bool isFocused()
+        {
+            return this.focused;
         }
 
         protected override CreateParams CreateParams
@@ -75,6 +81,16 @@ namespace AutoKeyboardClick
                 this.Left = this.Left + (e.X - originalX);
             }
                 
+        }
+
+        private void FormMouseTracer_Activated(object sender, EventArgs e)
+        {
+            this.focused = true;
+        }
+
+        private void FormMouseTracer_Deactivate(object sender, EventArgs e)
+        {
+            this.focused = false;
         }
     }
 }

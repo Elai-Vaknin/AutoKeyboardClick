@@ -37,6 +37,8 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "FormMouseTracer";
             this.Text = "Form2";
+            this.Activated += new System.EventHandler(this.FormMouseTracer_Activated);
+            this.Deactivate += new System.EventHandler(this.FormMouseTracer_Deactivate);
             this.Load += new System.EventHandler(this.Form2_Load);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FormMouseTracer_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.FormMouseTracer_MouseMove);
