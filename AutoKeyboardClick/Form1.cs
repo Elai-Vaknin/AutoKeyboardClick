@@ -6,6 +6,7 @@ using AutoIt;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 
 namespace AutoKeyboardClick
 {       
@@ -38,21 +39,34 @@ namespace AutoKeyboardClick
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out Point lpPoint);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+
         AutoItX3 au3 = new AutoItX3();
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
-
 
 
         private int delay;
         private int repeats;
         private int activateKeyPress;
-       
+        private int currentX;
+        private int currentY;
+
+        private Point originalPosition;
+
         private IntPtr selectedWindow;
         private IntPtr keysHook;
 
         private char selectedKey;
 
         private bool pressing;
+        private bool dragging;
 
         private const int WH_KEYBOARD_LL = 0xD;
         private const int WM_KEYDOWN = 0x100;
@@ -65,6 +79,8 @@ namespace AutoKeyboardClick
         private const int WM_RBUTTONDOWN = 0x204;
         private const int WM_RBUTTONUP = 0x205;
         private const int WM_RBUTTONDBLCLK = 0x206;
+
+        private FormMouseTracer overlay;
 
         private void LoadKeyInputs()
         {
@@ -117,6 +133,20 @@ namespace AutoKeyboardClick
 
         private void Init()
         {
+            Point p = pbDragLanding.PointToScreen(Point.Empty);
+            overlay = new FormMouseTracer();
+            overlay.FormBorderStyle = FormBorderStyle.None;
+            overlay.ShowInTaskbar = false;
+            overlay.TopMost = true;
+            overlay.Size = new Size(10, 10);
+            overlay.BackColor = Color.Black;
+            overlay.Show();
+
+            this.StartPosition = FormStartPosition.Manual;
+            this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2);
+
+            overlay.Location = new Point(this.Location.X + pbDragLanding.Left + pbDragLanding.Width / 2, this.Location.Y + pbDragLanding.Top + pbDragLanding.Height + (pbDragLanding.Height - overlay.Size.Height) / 2);
+
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.activateKeyPress = 112; // F1
             this.pressing = false;
@@ -201,7 +231,8 @@ namespace AutoKeyboardClick
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            Thread threadR = new Thread(threadTest);
+            threadR.Start();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -331,6 +362,7 @@ namespace AutoKeyboardClick
         private void btnStart_Click(object sender, EventArgs e)
         {
             startPressing();
+            lblError.Text = Screen.PrimaryScreen.WorkingArea.Width + " " + pbDragLanding.Location.X + " " + pbDragLanding.Width + " " + this.Location;
         }
 
         private void btnStop_Click(object sender, EventArgs e)
@@ -343,6 +375,54 @@ namespace AutoKeyboardClick
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
                 e.Handled = true;
+            }
+        }
+
+        private void Form1_Move(object sender, EventArgs e)
+        {
+            Point p = new Point(this.Location.X + pbDragLanding.Left + pbDragLanding.Width / 2, this.Location.Y + pbDragLanding.Top + pbDragLanding.Height + (pbDragLanding.Height - overlay.Size.Height) / 2);
+            overlay.Location = p;
+
+            overlay.setDropLocation(p);
+        }
+
+        public static bool ApplicationIsActivated()
+        {
+            var activatedHandle = GetForegroundWindow();
+            if (activatedHandle == IntPtr.Zero)
+            {
+                return false;       // No window is currently activated
+            }
+
+            var procId = Process.GetCurrentProcess().Id;
+            int activeProcId;
+            GetWindowThreadProcessId(activatedHandle, out activeProcId);
+
+            return activeProcId == procId;
+        }
+
+        delegate void SetTextCallback(bool visible);
+
+        public void threadTest()
+        {
+            while (true)
+            {
+                bool visible = ApplicationIsActivated();
+
+                changeVisibility(visible);
+            }
+        }
+
+        public void changeVisibility(bool visible)
+        {
+            if (overlay.InvokeRequired)
+            {
+                SetTextCallback d = new SetTextCallback(changeVisibility);
+                this.Invoke(d, new object[] { visible });
+            }
+            else
+            {
+                overlay.Visible = visible;
             }
         }
     }

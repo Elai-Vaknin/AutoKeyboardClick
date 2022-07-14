@@ -52,13 +52,16 @@
             this.lblInfinite = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnStop = new System.Windows.Forms.Button();
+            this.pbDragLanding = new System.Windows.Forms.PictureBox();
+            this.label4 = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.pbDragLanding)).BeginInit();
             this.SuspendLayout();
             // 
             // btnFind
             // 
-            this.btnFind.Location = new System.Drawing.Point(460, 25);
+            this.btnFind.Location = new System.Drawing.Point(460, 23);
             this.btnFind.Name = "btnFind";
-            this.btnFind.Size = new System.Drawing.Size(59, 44);
+            this.btnFind.Size = new System.Drawing.Size(50, 50);
             this.btnFind.TabIndex = 0;
             this.btnFind.Text = "Find";
             this.btnFind.UseVisualStyleBackColor = true;
@@ -66,7 +69,7 @@
             // 
             // tbInput
             // 
-            this.tbInput.Location = new System.Drawing.Point(354, 48);
+            this.tbInput.Location = new System.Drawing.Point(354, 53);
             this.tbInput.Name = "tbInput";
             this.tbInput.Size = new System.Drawing.Size(100, 20);
             this.tbInput.TabIndex = 1;
@@ -75,11 +78,12 @@
             // lblMessage
             // 
             this.lblMessage.AutoSize = true;
-            this.lblMessage.Location = new System.Drawing.Point(354, 29);
+            this.lblMessage.Location = new System.Drawing.Point(354, 23);
+            this.lblMessage.MaximumSize = new System.Drawing.Size(80, 0);
             this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(100, 13);
+            this.lblMessage.Size = new System.Drawing.Size(79, 26);
             this.lblMessage.TabIndex = 2;
-            this.lblMessage.Text = "Enter window name";
+            this.lblMessage.Text = "Locate window by name";
             // 
             // cbKeys
             // 
@@ -157,7 +161,7 @@
             // lblFound
             // 
             this.lblFound.AutoSize = true;
-            this.lblFound.Location = new System.Drawing.Point(531, 29);
+            this.lblFound.Location = new System.Drawing.Point(516, 25);
             this.lblFound.MaximumSize = new System.Drawing.Size(65, 0);
             this.lblFound.Name = "lblFound";
             this.lblFound.Size = new System.Drawing.Size(65, 26);
@@ -299,11 +303,32 @@
             this.btnStop.UseVisualStyleBackColor = true;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
+            // pbDragLanding
+            // 
+            this.pbDragLanding.BackColor = System.Drawing.Color.Red;
+            this.pbDragLanding.Location = new System.Drawing.Point(460, 145);
+            this.pbDragLanding.Name = "pbDragLanding";
+            this.pbDragLanding.Size = new System.Drawing.Size(30, 30);
+            this.pbDragLanding.TabIndex = 26;
+            this.pbDragLanding.TabStop = false;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(354, 145);
+            this.label4.MaximumSize = new System.Drawing.Size(80, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(79, 26);
+            this.label4.TabIndex = 27;
+            this.label4.Text = "Locate window by dragging";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(601, 208);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.pbDragLanding);
             this.Controls.Add(this.btnStop);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.lblInfinite);
@@ -334,6 +359,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Elai Free Auto Keyboard Clicker";
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.Move += new System.EventHandler(this.Form1_Move);
+            ((System.ComponentModel.ISupportInitialize)(this.pbDragLanding)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -365,6 +392,8 @@
         private System.Windows.Forms.Label lblInfinite;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.PictureBox pbDragLanding;
+        private System.Windows.Forms.Label label4;
     }
 }
 
