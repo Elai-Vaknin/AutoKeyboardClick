@@ -10,7 +10,7 @@ using System.Drawing;
 
 namespace AutoKeyboardClick
 {       
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         [DllImport("User32.dll")]
         static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
@@ -82,6 +82,8 @@ namespace AutoKeyboardClick
         private const int WM_RBUTTONDBLCLK = 0x206;
 
         private FormMouseTracer overlay;
+        private Thread threadPressing;
+        private LowLevelKeyboardProc keyHookInstance;
 
         private void LoadKeyInputs()
         {
@@ -138,7 +140,8 @@ namespace AutoKeyboardClick
             overlay = new FormMouseTracer();
             overlay.FormBorderStyle = FormBorderStyle.None;
             overlay.ShowInTaskbar = false;
-            overlay.TopMost = true;
+            //overlay.TopMost = true;
+            overlay.Owner = this;
             overlay.Size = new Size(10, 10);
             overlay.BackColor = Color.Black;
             overlay.Show();
@@ -165,15 +168,18 @@ namespace AutoKeyboardClick
             cbSpecial.SelectedIndex = 0;
             cbStartStop.SelectedIndex = 0;
             lblFound.Text = "";
+            threadPressing = null;
         }
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
 
             Init();
 
-            SetHook(HookCallback);
+            this.keyHookInstance = HookCallback;
+
+            SetHook(this.keyHookInstance);
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -233,8 +239,7 @@ namespace AutoKeyboardClick
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Thread threadR = new Thread(threadTest);
-            threadR.Start();
+
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -333,7 +338,7 @@ namespace AutoKeyboardClick
 
             else
             {
-                for (int i = 0; i < this.repeats; i++)
+                for (int i = 0; i < this.repeats && pressing; i++)
                 {
                     pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
                 }
@@ -346,7 +351,7 @@ namespace AutoKeyboardClick
         {
             calculateStats();
 
-            if (!validateStart())
+            if (!validateStart() || threadPressing != null)
                 return;
 
             pressing = true;
@@ -357,7 +362,7 @@ namespace AutoKeyboardClick
 
             this.selectedKey = cbKeys.SelectedItem.ToString()[0];
 
-            Thread threadPressing = new Thread(threadHandler);
+            threadPressing = new Thread(threadHandler);
             threadPressing.Start();
         }
 
@@ -370,6 +375,7 @@ namespace AutoKeyboardClick
         private void btnStop_Click(object sender, EventArgs e)
         {
             reset();
+            threadPressing.Join();
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -386,45 +392,6 @@ namespace AutoKeyboardClick
             overlay.Location = p;
 
             overlay.setDropLocation(p);
-        }
-        /*
-        public static bool ApplicationIsActivated()
-        {
-            var activatedHandle = GetForegroundWindow();
-            if (activatedHandle == IntPtr.Zero)
-            {
-                return false;       // No window is currently activated
-            }
-
-            var procId = Process.GetCurrentProcess().Id;
-            int activeProcId;
-            GetWindowThreadProcessId(activatedHandle, out activeProcId);
-
-            return activeProcId == procId;
-        }
-        */
-        delegate void SetTextCallback(bool visible);
-
-        public void threadTest()
-        {
-            while (true)
-            {
-                changeVisibility((this.focused || overlay.isFocused()));
-                Thread.Sleep(25);
-            }
-        }
-
-        public void changeVisibility(bool visible)
-        {
-            if (overlay.InvokeRequired)
-            {
-                SetTextCallback d = new SetTextCallback(changeVisibility);
-                this.Invoke(d, new object[] { visible });
-            }
-            else
-            {
-                overlay.Visible = visible;
-            }
         }
 
         private void Form1_Activated(object sender, EventArgs e)
