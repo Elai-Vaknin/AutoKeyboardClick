@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Text;
 
 namespace AutoKeyboardClick
 {       
@@ -48,6 +49,21 @@ namespace AutoKeyboardClick
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetActiveWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        //Mouse actions
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+
         AutoItX3 au3 = new AutoItX3();
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
 
@@ -67,7 +83,6 @@ namespace AutoKeyboardClick
 
         private bool pressing;
         private bool dragging;
-        private bool focused;
 
         private const int WH_KEYBOARD_LL = 0xD;
         private const int WM_KEYDOWN = 0x100;
@@ -137,10 +152,9 @@ namespace AutoKeyboardClick
         private void Init()
         {
             Point p = pbDragLanding.PointToScreen(Point.Empty);
-            overlay = new FormMouseTracer();
+            overlay = new FormMouseTracer(mouseTracerCallback);
             overlay.FormBorderStyle = FormBorderStyle.None;
             overlay.ShowInTaskbar = false;
-            //overlay.TopMost = true;
             overlay.Owner = this;
             overlay.Size = new Size(10, 10);
             overlay.BackColor = Color.Black;
@@ -154,7 +168,6 @@ namespace AutoKeyboardClick
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.activateKeyPress = 112; // F1
             this.pressing = false;
-            this.focused = false;
             this.selectedWindow = IntPtr.Zero;
             this.keysHook = IntPtr.Zero;
             
@@ -176,7 +189,7 @@ namespace AutoKeyboardClick
             InitializeComponent();
 
             Init();
-
+            
             this.keyHookInstance = HookCallback;
 
             SetHook(this.keyHookInstance);
@@ -206,15 +219,37 @@ namespace AutoKeyboardClick
             using (Process curProcess = Process.GetCurrentProcess())
             using (ProcessModule curModule = curProcess.MainModule)
             {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc,
-                    GetModuleHandle(curModule.ModuleName), 0);
+                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
             }
         }
 
-        private void btnFind_Click(object sender, EventArgs e)
+        private int mouseTracerCallback()
         {
-            String name = tbInput.Text;
+            DoMouseClick();
 
+            long milliseconds = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            while (milliseconds + 200 > DateTimeOffset.Now.ToUnixTimeMilliseconds())
+                continue;
+
+            IntPtr handle = GetForegroundWindow();
+            const int count = 512;
+
+            var text = new StringBuilder(count);
+
+            if (GetWindowText(handle, text, count) > 0)
+            {
+                lblFound.Text = text.ToString();
+
+                findWindowByName(text.ToString());
+            } else
+                lblFound.Text = "Error";
+
+            return 1;
+        }
+
+        private void findWindowByName(String name)
+        {
             if (name == null)
                 return;
 
@@ -227,7 +262,11 @@ namespace AutoKeyboardClick
 
             if (zero != IntPtr.Zero)
             {
-                lblFound.Text = zero + "";
+                var text = new StringBuilder(32);
+
+                GetWindowText(zero, text, 32);
+
+                lblFound.Text = text.ToString() + "\n\n" + zero;
 
                 selectedWindow = zero;
             }
@@ -235,6 +274,13 @@ namespace AutoKeyboardClick
             {
                 lblFound.Text = "Can't Find";
             }
+        }
+
+        private void btnFind_Click(object sender, EventArgs e)
+        {
+            String name = tbInput.Text;
+
+            findWindowByName(name);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -351,7 +397,7 @@ namespace AutoKeyboardClick
         {
             calculateStats();
 
-            if (!validateStart() || threadPressing != null)
+            if (!validateStart())
                 return;
 
             pressing = true;
@@ -366,6 +412,14 @@ namespace AutoKeyboardClick
             threadPressing.Start();
         }
 
+        public void DoMouseClick()
+        {
+            //Call the imported function with the cursor's current position
+            uint X = (uint)Cursor.Position.X;
+            uint Y = (uint)Cursor.Position.Y;
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
+        }
+
         private void btnStart_Click(object sender, EventArgs e)
         {
             startPressing();
@@ -375,7 +429,6 @@ namespace AutoKeyboardClick
         private void btnStop_Click(object sender, EventArgs e)
         {
             reset();
-            threadPressing.Join();
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -392,16 +445,6 @@ namespace AutoKeyboardClick
             overlay.Location = p;
 
             overlay.setDropLocation(p);
-        }
-
-        private void Form1_Activated(object sender, EventArgs e)
-        {
-            this.focused = true;
-        }
-
-        private void Form1_Deactivate(object sender, EventArgs e)
-        {
-            this.focused = false;
         }
     }
 }

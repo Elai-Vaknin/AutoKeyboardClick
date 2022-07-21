@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,16 +14,23 @@ namespace AutoKeyboardClick
     public partial class FormMouseTracer : Form
     {
         private bool dragging;
-        private bool focused;
 
         private int originalX;
         private int originalY;
 
         private Point dropLocation;
+        private Func<int> callback;
 
         public FormMouseTracer()
         {
             InitializeComponent();
+        }
+
+        public FormMouseTracer(Func<int> fun)
+        {
+            InitializeComponent();
+
+            callback = fun;
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -33,11 +41,6 @@ namespace AutoKeyboardClick
         public void setDropLocation(Point p)
         {
             this.dropLocation = p;
-        }
-
-        public bool isFocused()
-        {
-            return this.focused;
         }
 
         protected override CreateParams CreateParams
@@ -59,18 +62,23 @@ namespace AutoKeyboardClick
             }
         }
 
+      
+
         private void FormMouseTracer_MouseDown(object sender, MouseEventArgs e)
         {
             this.originalX = e.X;
             this.originalY = e.Y;
             this.dragging = true;
+            this.TopMost = true;
         }
 
         private void FormMouseTracer_MouseUp(object sender, MouseEventArgs e)
         {
             this.dragging = false;
-
+            this.TopMost = false;
             this.Location = this.dropLocation;
+
+            callback();
         }
 
         private void FormMouseTracer_MouseMove(object sender, MouseEventArgs e)
@@ -81,16 +89,6 @@ namespace AutoKeyboardClick
                 this.Left = this.Left + (e.X - originalX);
             }
                 
-        }
-
-        private void FormMouseTracer_Activated(object sender, EventArgs e)
-        {
-            this.focused = true;
-        }
-
-        private void FormMouseTracer_Deactivate(object sender, EventArgs e)
-        {
-            this.focused = false;
         }
     }
 }
