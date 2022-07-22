@@ -54,14 +54,17 @@
             this.btnStop = new System.Windows.Forms.Button();
             this.pbDragLanding = new System.Windows.Forms.PictureBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.btnClear = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pbDragLanding)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnFind
             // 
             this.btnFind.Location = new System.Drawing.Point(460, 23);
             this.btnFind.Name = "btnFind";
-            this.btnFind.Size = new System.Drawing.Size(50, 50);
+            this.btnFind.Size = new System.Drawing.Size(65, 23);
             this.btnFind.TabIndex = 0;
             this.btnFind.Text = "Find";
             this.btnFind.UseVisualStyleBackColor = true;
@@ -161,12 +164,12 @@
             // lblFound
             // 
             this.lblFound.AutoSize = true;
-            this.lblFound.Location = new System.Drawing.Point(516, 25);
-            this.lblFound.MaximumSize = new System.Drawing.Size(65, 0);
+            this.lblFound.Location = new System.Drawing.Point(531, 37);
+            this.lblFound.MaximumSize = new System.Drawing.Size(70, 0);
             this.lblFound.Name = "lblFound";
-            this.lblFound.Size = new System.Drawing.Size(65, 26);
+            this.lblFound.Size = new System.Drawing.Size(67, 26);
             this.lblFound.TabIndex = 10;
-            this.lblFound.Text = "Locate a window first!";
+            this.lblFound.Text = "General or Select target";
             // 
             // btnSave
             // 
@@ -305,7 +308,8 @@
             // 
             // pbDragLanding
             // 
-            this.pbDragLanding.BackColor = System.Drawing.Color.Red;
+            this.pbDragLanding.BackColor = System.Drawing.Color.Black;
+            this.pbDragLanding.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.pbDragLanding.Location = new System.Drawing.Point(460, 145);
             this.pbDragLanding.Name = "pbDragLanding";
             this.pbDragLanding.Size = new System.Drawing.Size(30, 30);
@@ -322,11 +326,33 @@
             this.label4.TabIndex = 27;
             this.label4.Text = "Locate window by dragging";
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackColor = System.Drawing.Color.White;
+            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.pictureBox1.Location = new System.Drawing.Point(462, 147);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(26, 26);
+            this.pictureBox1.TabIndex = 28;
+            this.pictureBox1.TabStop = false;
+            // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(460, 53);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(65, 23);
+            this.btnClear.TabIndex = 29;
+            this.btnClear.Text = "Clear";
+            this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(601, 208);
+            this.Controls.Add(this.btnClear);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.pbDragLanding);
             this.Controls.Add(this.btnStop);
@@ -361,6 +387,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Move += new System.EventHandler(this.Form1_Move);
             ((System.ComponentModel.ISupportInitialize)(this.pbDragLanding)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -394,6 +421,8 @@
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.PictureBox pbDragLanding;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button btnClear;
     }
 }
 

@@ -35,7 +35,13 @@ namespace AutoKeyboardClick
 
         private void Form2_Load(object sender, EventArgs e)
         {
+            /* Circular form */
 
+            System.Drawing.Drawing2D.GraphicsPath shape = new System.Drawing.Drawing2D.GraphicsPath();
+
+            shape.AddEllipse(0, 0, this.Width, this.Height);
+
+            this.Region = new System.Drawing.Region(shape);
         }
 
         public void setDropLocation(Point p)

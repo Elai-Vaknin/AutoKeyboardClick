@@ -36,7 +36,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Name = "FormMouseTracer";
-            this.Text = "Form2";
+            this.Text = "MouseTracer";
             this.Load += new System.EventHandler(this.Form2_Load);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FormMouseTracer_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.FormMouseTracer_MouseMove);

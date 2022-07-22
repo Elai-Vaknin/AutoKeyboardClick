@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.Threading;
-using AutoItX3Lib;
-using AutoIt;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,7 +12,10 @@ namespace AutoKeyboardClick
     public partial class FormMain : Form
     {
         [DllImport("User32.dll")]
-        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
 
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -26,8 +27,7 @@ namespace AutoKeyboardClick
         static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook,
-        LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -64,9 +64,7 @@ namespace AutoKeyboardClick
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
-        AutoItX3 au3 = new AutoItX3();
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
-
 
         private int delay;
         private int repeats;
@@ -95,6 +93,9 @@ namespace AutoKeyboardClick
         private const int WM_RBUTTONDOWN = 0x204;
         private const int WM_RBUTTONUP = 0x205;
         private const int WM_RBUTTONDBLCLK = 0x206;
+
+        public const int KEYEVENTF_KEYDOWN = 0x0001; //Key down flag
+        public const int KEYEVENTF_KEYUP = 0x0002; //Key up flag
 
         private FormMouseTracer overlay;
         private Thread threadPressing;
@@ -233,16 +234,14 @@ namespace AutoKeyboardClick
                 continue;
 
             IntPtr handle = GetForegroundWindow();
+
             const int count = 512;
 
             var text = new StringBuilder(count);
 
             if (GetWindowText(handle, text, count) > 0)
-            {
-                lblFound.Text = text.ToString();
-
                 findWindowByName(text.ToString());
-            } else
+            else
                 lblFound.Text = "Error";
 
             return 1;
@@ -250,7 +249,7 @@ namespace AutoKeyboardClick
 
         private void findWindowByName(String name)
         {
-            if (name == null)
+            if (name == null || name.Equals(overlay.Text))
                 return;
 
             IntPtr zero = IntPtr.Zero;
@@ -305,19 +304,13 @@ namespace AutoKeyboardClick
         {
             pressing = false;
 
-            btnStart.Enabled = true;
+            ChangeButtonState(true);
 
-            lblError.Text = "Waiting for action";
+            WriteTextSafe("Waiting for action");
         }
 
         private bool validateStart()
         {
-            if (this.selectedWindow == null)
-            {
-                lblError.Text = "No window is selected";
-                return false;
-            }
-
             if (cbKeys.SelectedIndex < 0)
             {
                 lblError.Text = "No key is selected";
@@ -333,15 +326,56 @@ namespace AutoKeyboardClick
             return true;
         }
 
+        public void WriteTextSafe(string text)
+        {
+            if (lblError.InvokeRequired)
+            {
+                // Call this same method but append THREAD2 to the text
+                Action safeWrite = delegate { WriteTextSafe($"{text}"); };
+                lblError.Invoke(safeWrite);
+            }
+            else
+                lblError.Text = text;
+        }
+
+        public void ChangeButtonState(bool state)
+        {
+            if (lblError.InvokeRequired)
+            {
+                // Call this same method but append THREAD2 to the text
+                Action stateAct = delegate { WriteTextSafe($"{state}"); };
+                btnStart.Invoke(stateAct);
+            }
+            else
+                btnStart.Enabled = state;
+        }
+
         private void pressKey(IntPtr window, int key, int lval, int delay)
         {
-            PostMessage(this.selectedWindow, WM_KEYDOWN, key, lval);
+            if(this.selectedWindow != IntPtr.Zero)
+            {
+                PostMessage(this.selectedWindow, WM_KEYDOWN, key, lval);
 
-            Thread.Sleep(10);
+                Thread.Sleep(10);
 
-            PostMessage(this.selectedWindow, WM_KEYUP, key, lval);
+                PostMessage(this.selectedWindow, WM_KEYUP, key, lval);
 
-            Thread.Sleep(delay);
+                Thread.Sleep(delay);
+            }
+            else
+            {
+                Byte keyByte = (Byte)this.selectedKey;
+
+                Thread.Sleep(10);
+
+                keybd_event(keyByte, 0, KEYEVENTF_KEYDOWN, 0);
+
+                Thread.Sleep(10);
+
+                keybd_event(keyByte, 0, KEYEVENTF_KEYUP, 0);
+
+                Thread.Sleep(delay);
+            }
         }
 
         private void calculateStats()
@@ -365,6 +399,19 @@ namespace AutoKeyboardClick
             }
         }
 
+        public bool isFormFocused()
+        {
+            IntPtr handle = GetForegroundWindow();
+
+            int len = this.Text.Length + 1;
+
+            StringBuilder text = new StringBuilder(len);
+
+            GetWindowText(handle, text, len);
+
+            return this.Text.Equals(text.ToString());
+        }
+
         public void threadHandler()
         {
             int value = 0;
@@ -378,13 +425,14 @@ namespace AutoKeyboardClick
             {
                 while (pressing)
                 {
-                    pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
+                    if(!isFormFocused())
+                        pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
                 }
             }
 
             else
             {
-                for (int i = 0; i < this.repeats && pressing; i++)
+                for (int i = 0; i < this.repeats && pressing && !isFormFocused(); i++)
                 {
                     pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
                 }
@@ -402,9 +450,9 @@ namespace AutoKeyboardClick
 
             pressing = true;
 
-            btnStart.Enabled = false;
+            ChangeButtonState(false);
 
-            lblError.Text = "Pressing..";
+            WriteTextSafe("Pressing...");
 
             this.selectedKey = cbKeys.SelectedItem.ToString()[0];
 
@@ -428,6 +476,8 @@ namespace AutoKeyboardClick
 
         private void btnStop_Click(object sender, EventArgs e)
         {
+            lblFound.Text = "CLICK";
+
             reset();
         }
 
@@ -445,6 +495,13 @@ namespace AutoKeyboardClick
             overlay.Location = p;
 
             overlay.setDropLocation(p);
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            this.selectedWindow = IntPtr.Zero;
+
+            lblFound.Text = "General or Select target";
         }
     }
 }
