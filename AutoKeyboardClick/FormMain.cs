@@ -178,8 +178,8 @@ namespace AutoKeyboardClick
             LoadKeyInputs();
 
             this.StartPosition = FormStartPosition.Manual;
-            this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2);
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2); // Center of the screen
+            //this.FormBorderStyle = FormBorderStyle.Sizable;
             this.activateKeyPress = 112; // F1
             this.pressing = false;
             this.selectedWindow = IntPtr.Zero;
@@ -210,16 +210,11 @@ namespace AutoKeyboardClick
 
                 if(vkCode == this.activateKeyPress)
                 {
-                    if (!this.pressing)
-                    {
-                        startPressing();
-                    }
-                    else 
-                    {
-                        reset();
-                    }
+                    if (!this.pressing)     startPressing();
+                    else                    reset();
                 }
             }
+
             return CallNextHookEx(keysHook, nCode, wParam, lParam);
         }
 
@@ -247,10 +242,8 @@ namespace AutoKeyboardClick
 
             var text = new StringBuilder(count);
 
-            if (GetWindowText(handle, text, count) > 0)
-                findWindowByName(text.ToString());
-            else
-                lblFound.Text = "Error";
+            if (GetWindowText(handle, text, count) > 0)     findWindowByName(text.ToString());
+            else                                            lblFound.Text = "Error";
 
             return 1;
         }
@@ -275,7 +268,7 @@ namespace AutoKeyboardClick
 
                 lblFound.Text = text.ToString() + " - " + zero;
 
-                selectedWindow = zero;
+                this.selectedWindow = zero;
             }
             else
             {
@@ -290,18 +283,13 @@ namespace AutoKeyboardClick
             findWindowByName(name);
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnSave_Click(object sender, EventArgs e)
         {
-            int keyCode = 112; // F1
+            int keyCode = 0x70; // F1
 
             keyCode += cbStartStop.SelectedIndex;
 
-            if (keyCode <= 123) // F12
+            if (keyCode <= 0x7B) // F12
                 this.activateKeyPress = keyCode;
 
             lblError.Text = keyCode + "";
@@ -310,7 +298,7 @@ namespace AutoKeyboardClick
 
         private void reset()
         {
-            pressing = false;
+            this.pressing = false;
 
             ChangeButtonState(true);
 
@@ -324,6 +312,7 @@ namespace AutoKeyboardClick
                 lblError.Text = "No key is selected";
                 return false;
             }
+
             if (this.delay <= 0)
             {
                 lblError.Text = "Invalid delay or repeats";
@@ -505,11 +494,6 @@ namespace AutoKeyboardClick
             overlay.setDropLocation(l);
         }
 
-        private void Form1_Move(object sender, EventArgs e)
-        {
-            setOverlayLocation(getOverlayLocation());
-        }
-
         private void btnClear_Click(object sender, EventArgs e)
         {
             this.selectedWindow = IntPtr.Zero;
@@ -520,6 +504,11 @@ namespace AutoKeyboardClick
         private void cbSpecial_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.selectedSpecial = cbSpecial.SelectedIndex;
+        }
+
+        private void FormMain_Move(object sender, EventArgs e)
+        {
+            setOverlayLocation(getOverlayLocation());
         }
     }
 }

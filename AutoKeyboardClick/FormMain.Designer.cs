@@ -91,7 +91,6 @@
             this.tbInput.Name = "tbInput";
             this.tbInput.Size = new System.Drawing.Size(100, 20);
             this.tbInput.TabIndex = 1;
-            this.tbInput.Text = "MapleMS";
             // 
             // lblMessage
             // 
@@ -450,13 +449,15 @@
             this.Controls.Add(this.cbKeys);
             this.Controls.Add(this.gbKey);
             this.Controls.Add(this.gbDelay);
+            this.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.HelpButton = true;
             this.MaximizeBox = false;
-            this.MinimizeBox = false;
             this.Name = "FormMain";
+            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Elai Free Auto Keyboard Clicker";
-            this.Load += new System.EventHandler(this.Form1_Load);
-            this.Move += new System.EventHandler(this.Form1_Move);
+            this.Move += new System.EventHandler(this.FormMain_Move);
             ((System.ComponentModel.ISupportInitialize)(this.pbBlack)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbWhite)).EndInit();
             this.gbKey.ResumeLayout(false);
