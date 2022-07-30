@@ -58,12 +58,6 @@ namespace AutoKeyboardClick
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
-        //Mouse actions
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
-        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const int MOUSEEVENTF_RIGHTUP = 0x10;
-
         Dictionary<char, int> keys_to_direct_input = new Dictionary<char, int>();
 
         private int delay;
@@ -81,6 +75,11 @@ namespace AutoKeyboardClick
 
         private bool pressing;
         private bool dragging;
+
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
         private const int WH_KEYBOARD_LL = 0xD;
         private const int WM_KEYDOWN = 0x100;
@@ -152,19 +151,19 @@ namespace AutoKeyboardClick
 
         private void Init()
         {
-            Point p = pbDragLanding.PointToScreen(Point.Empty);
+            Point p = pbBlack.PointToScreen(Point.Empty);
             overlay = new FormMouseTracer(mouseTracerCallback);
             overlay.FormBorderStyle = FormBorderStyle.None;
             overlay.ShowInTaskbar = false;
             overlay.Owner = this;
-            overlay.Size = new Size(10, 10);
+            overlay.Size = new Size(3, 3);
             overlay.BackColor = Color.Black;
             overlay.Show();
-            
+
             this.StartPosition = FormStartPosition.Manual;
             this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2);
 
-            overlay.Location = new Point(this.Location.X + pbDragLanding.Left + pbDragLanding.Width / 2, this.Location.Y + pbDragLanding.Top + pbDragLanding.Height + (pbDragLanding.Height - overlay.Size.Height) / 2);
+            overlay.Location = getOverlayLocation();
 
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.activateKeyPress = 112; // F1
@@ -181,7 +180,7 @@ namespace AutoKeyboardClick
 
             cbSpecial.SelectedIndex = 0;
             cbStartStop.SelectedIndex = 0;
-            lblFound.Text = "";
+
             threadPressing = null;
         }
 
@@ -265,7 +264,7 @@ namespace AutoKeyboardClick
 
                 GetWindowText(zero, text, 32);
 
-                lblFound.Text = text.ToString() + "\n\n" + zero;
+                lblFound.Text = text.ToString() + " - " + zero;
 
                 selectedWindow = zero;
             }
@@ -471,13 +470,11 @@ namespace AutoKeyboardClick
         private void btnStart_Click(object sender, EventArgs e)
         {
             startPressing();
-            lblError.Text = Screen.PrimaryScreen.WorkingArea.Width + " " + pbDragLanding.Location.X + " " + pbDragLanding.Width + " " + this.Location;
+            //lblError.Text = Screen.PrimaryScreen.WorkingArea.Width + " " + pbBlack.Location.X + " " + pbBlack.Width + " " + this.Location;
         }
 
         private void btnStop_Click(object sender, EventArgs e)
         {
-            lblFound.Text = "CLICK";
-
             reset();
         }
 
@@ -489,19 +486,35 @@ namespace AutoKeyboardClick
             }
         }
 
+        private Point getOverlayLocation()
+        {
+            const int topBarLen = 20;
+
+            return new Point(this.Location.X + gbLocate.Location.X + gbDragging.Location.X + pbWhite.Location.X + pbWhite.Width / 2,
+                topBarLen + this.Location.Y + gbLocate.Location.Y + gbDragging.Location.Y + pbWhite.Location.Y + pbBlack.Height / 2);
+        }
+
+        private void setOverlayLocation(Point l)
+        {
+            overlay.Location = l;
+            overlay.setDropLocation(l);
+        }
+
         private void Form1_Move(object sender, EventArgs e)
         {
-            Point p = new Point(this.Location.X + pbDragLanding.Left + pbDragLanding.Width / 2, this.Location.Y + pbDragLanding.Top + pbDragLanding.Height + (pbDragLanding.Height - overlay.Size.Height) / 2);
-            overlay.Location = p;
-
-            overlay.setDropLocation(p);
+            setOverlayLocation(getOverlayLocation());
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
             this.selectedWindow = IntPtr.Zero;
 
-            lblFound.Text = "General or Select target";
+            lblFound.Text = "No target window";
+        }
+
+        private void lblFound_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
