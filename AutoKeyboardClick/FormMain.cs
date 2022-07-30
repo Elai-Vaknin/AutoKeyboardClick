@@ -250,7 +250,7 @@ namespace AutoKeyboardClick
 
         private void findWindowByName(String name)
         {
-            if (name == null || name.Equals(overlay.Text))
+            if (name.Equals("") || name.Equals(overlay.Text))
                 return;
 
             IntPtr zero = IntPtr.Zero;
@@ -291,9 +291,6 @@ namespace AutoKeyboardClick
 
             if (keyCode <= 0x7B) // F12
                 this.activateKeyPress = keyCode;
-
-            lblError.Text = keyCode + "";
-
         }
 
         private void reset()
