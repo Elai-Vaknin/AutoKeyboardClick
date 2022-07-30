@@ -53,10 +53,10 @@
             this.btnClear = new System.Windows.Forms.Button();
             this.gbKey = new System.Windows.Forms.GroupBox();
             this.gbDelay = new System.Windows.Forms.GroupBox();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.gbName = new System.Windows.Forms.GroupBox();
             this.gbActivation = new System.Windows.Forms.GroupBox();
             this.gbDragging = new System.Windows.Forms.GroupBox();
@@ -65,10 +65,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbWhite)).BeginInit();
             this.gbKey.SuspendLayout();
             this.gbDelay.SuspendLayout();
+            this.groupBox6.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            this.groupBox6.SuspendLayout();
             this.gbName.SuspendLayout();
             this.gbActivation.SuspendLayout();
             this.gbDragging.SuspendLayout();
@@ -129,13 +129,14 @@
             this.cbSpecial.FormattingEnabled = true;
             this.cbSpecial.Items.AddRange(new object[] {
             "None",
+            "Shift",
             "Ctrl",
-            "Alt",
-            "Shift"});
+            "Alt"});
             this.cbSpecial.Location = new System.Drawing.Point(88, 28);
             this.cbSpecial.Name = "cbSpecial";
             this.cbSpecial.Size = new System.Drawing.Size(121, 21);
             this.cbSpecial.TabIndex = 6;
+            this.cbSpecial.SelectedIndexChanged += new System.EventHandler(this.cbSpecial_SelectedIndexChanged);
             // 
             // label2
             // 
@@ -226,7 +227,7 @@
             this.tbMinutes.TabIndex = 15;
             this.tbMinutes.Tag = "";
             this.tbMinutes.Text = "0";
-            this.tbMinutes.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox1_KeyPress);
+            this.tbMinutes.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxDelay_KeyPress);
             // 
             // tbSeconds
             // 
@@ -237,6 +238,7 @@
             this.tbSeconds.TabIndex = 17;
             this.tbSeconds.Tag = "";
             this.tbSeconds.Text = "0";
+            this.tbSeconds.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxDelay_KeyPress);
             // 
             // tbMilliseconds
             // 
@@ -247,6 +249,7 @@
             this.tbMilliseconds.TabIndex = 19;
             this.tbMilliseconds.Tag = "";
             this.tbMilliseconds.Text = "250";
+            this.tbMilliseconds.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxDelay_KeyPress);
             // 
             // tbRepeats
             // 
@@ -257,6 +260,7 @@
             this.tbRepeats.TabIndex = 21;
             this.tbRepeats.Tag = "";
             this.tbRepeats.Text = "0";
+            this.tbRepeats.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxDelay_KeyPress);
             // 
             // lblInfinite
             // 
@@ -342,6 +346,27 @@
             this.gbDelay.TabStop = false;
             this.gbDelay.Text = "Delay Settings";
             // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.tbRepeats);
+            this.groupBox6.Controls.Add(this.lblInfinite);
+            this.groupBox6.Location = new System.Drawing.Point(328, 16);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(142, 51);
+            this.groupBox6.TabIndex = 35;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "Repeats";
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.tbMilliseconds);
+            this.groupBox5.Location = new System.Drawing.Point(241, 16);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(81, 51);
+            this.groupBox5.TabIndex = 34;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Milliseconds";
+            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.tbMinutes);
@@ -361,27 +386,6 @@
             this.groupBox4.TabIndex = 33;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Seconds";
-            // 
-            // groupBox5
-            // 
-            this.groupBox5.Controls.Add(this.tbMilliseconds);
-            this.groupBox5.Location = new System.Drawing.Point(241, 16);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(81, 51);
-            this.groupBox5.TabIndex = 34;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Milliseconds";
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Controls.Add(this.tbRepeats);
-            this.groupBox6.Controls.Add(this.lblInfinite);
-            this.groupBox6.Location = new System.Drawing.Point(328, 16);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(142, 51);
-            this.groupBox6.TabIndex = 35;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "Repeats";
             // 
             // gbName
             // 
@@ -459,14 +463,14 @@
             this.gbKey.PerformLayout();
             this.gbDelay.ResumeLayout(false);
             this.gbDelay.PerformLayout();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            this.groupBox6.ResumeLayout(false);
-            this.groupBox6.PerformLayout();
             this.gbName.ResumeLayout(false);
             this.gbName.PerformLayout();
             this.gbActivation.ResumeLayout(false);

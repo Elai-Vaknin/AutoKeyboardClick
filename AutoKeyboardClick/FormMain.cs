@@ -63,10 +63,7 @@ namespace AutoKeyboardClick
         private int delay;
         private int repeats;
         private int activateKeyPress;
-        private int currentX;
-        private int currentY;
-
-        private Point originalPosition;
+        private int selectedSpecial;
 
         private IntPtr selectedWindow;
         private IntPtr keysHook;
@@ -74,16 +71,20 @@ namespace AutoKeyboardClick
         private char selectedKey;
 
         private bool pressing;
-        private bool dragging;
 
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
         private const int MOUSEEVENTF_LEFTUP = 0x04;
+
+        /* Not needed
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
+        */
 
         private const int WH_KEYBOARD_LL = 0xD;
         private const int WM_KEYDOWN = 0x100;
         private const int WM_KEYUP = 0x101;
+
+        /* Not needed
         private const int WM_CHAR = 0x0102;
         private const int WM_COMMAND = 0x111;
         private const int WM_LBUTTONDOWN = 0x201;
@@ -92,9 +93,16 @@ namespace AutoKeyboardClick
         private const int WM_RBUTTONDOWN = 0x204;
         private const int WM_RBUTTONUP = 0x205;
         private const int WM_RBUTTONDBLCLK = 0x206;
+        */
 
-        public const int KEYEVENTF_KEYDOWN = 0x0001; //Key down flag
-        public const int KEYEVENTF_KEYUP = 0x0002; //Key up flag
+        private readonly int[] diSpecial = new int[] { 0x2A, 0x1D, 0x38 };
+        private readonly int[] vkSpecial = new int[] { 0xA0, 0xA2, 0xA4 };
+
+        public const int KEYEVENTF_KEYDOWN = 0x0001;
+        public const int KEYEVENTF_KEYUP = 0x0002;
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
 
         private FormMouseTracer overlay;
         private Thread threadPressing;
@@ -147,11 +155,14 @@ namespace AutoKeyboardClick
             keys_to_direct_input.Add(',', 0x330001);
             keys_to_direct_input.Add('.', 0x340001);
             keys_to_direct_input.Add('/', 0x350001);
+
+            foreach (KeyValuePair<char, int> entry in keys_to_direct_input)
+                cbKeys.Items.Add(entry.Key);
         }
 
-        private void Init()
+        /* Creates the dragging window */
+        private void createOverlay()
         {
-            Point p = pbBlack.PointToScreen(Point.Empty);
             overlay = new FormMouseTracer(mouseTracerCallback);
             overlay.FormBorderStyle = FormBorderStyle.None;
             overlay.ShowInTaskbar = false;
@@ -159,29 +170,25 @@ namespace AutoKeyboardClick
             overlay.Size = new Size(3, 3);
             overlay.BackColor = Color.Black;
             overlay.Show();
+            overlay.Location = getOverlayLocation();
+        }
+        private void Init()
+        {
+            createOverlay();
+            LoadKeyInputs();
 
             this.StartPosition = FormStartPosition.Manual;
             this.Location = new Point((Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2, (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2);
-
-            overlay.Location = getOverlayLocation();
-
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.activateKeyPress = 112; // F1
             this.pressing = false;
             this.selectedWindow = IntPtr.Zero;
             this.keysHook = IntPtr.Zero;
-            
-            LoadKeyInputs();
-
-            foreach (KeyValuePair<char, int> entry in keys_to_direct_input)
-            {
-                cbKeys.Items.Add(entry.Key);
-            }
+            this.selectedSpecial = 0;
+            this.threadPressing = null;
 
             cbSpecial.SelectedIndex = 0;
             cbStartStop.SelectedIndex = 0;
-
-            threadPressing = null;
         }
 
         public FormMain()
@@ -195,8 +202,6 @@ namespace AutoKeyboardClick
             SetHook(this.keyHookInstance);
         }
 
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
@@ -206,9 +211,13 @@ namespace AutoKeyboardClick
                 if(vkCode == this.activateKeyPress)
                 {
                     if (!this.pressing)
+                    {
                         startPressing();
-                    else
+                    }
+                    else 
+                    {
                         reset();
+                    }
                 }
             }
             return CallNextHookEx(keysHook, nCode, wParam, lParam);
@@ -317,7 +326,7 @@ namespace AutoKeyboardClick
             }
             if (this.delay <= 0)
             {
-                lblError.Text = "Invalid delay";
+                lblError.Text = "Invalid delay or repeats";
                 return false;
             }
 
@@ -329,7 +338,6 @@ namespace AutoKeyboardClick
         {
             if (lblError.InvokeRequired)
             {
-                // Call this same method but append THREAD2 to the text
                 Action safeWrite = delegate { WriteTextSafe($"{text}"); };
                 lblError.Invoke(safeWrite);
             }
@@ -339,10 +347,9 @@ namespace AutoKeyboardClick
 
         public void ChangeButtonState(bool state)
         {
-            if (lblError.InvokeRequired)
+            if (btnStart.InvokeRequired)
             {
-                // Call this same method but append THREAD2 to the text
-                Action stateAct = delegate { WriteTextSafe($"{state}"); };
+                Action stateAct = delegate { ChangeButtonState(state); };
                 btnStart.Invoke(stateAct);
             }
             else
@@ -351,11 +358,19 @@ namespace AutoKeyboardClick
 
         private void pressKey(IntPtr window, int key, int lval, int delay)
         {
-            if(this.selectedWindow != IntPtr.Zero)
+            int indexSpecial = this.selectedSpecial - 1;
+
+            if (this.selectedWindow != IntPtr.Zero)
             {
+                if(indexSpecial >= 0)
+                    PostMessage(this.selectedWindow, WM_KEYDOWN, diSpecial[indexSpecial], diSpecial[indexSpecial] << 16 | 0x1);
+
                 PostMessage(this.selectedWindow, WM_KEYDOWN, key, lval);
 
                 Thread.Sleep(10);
+
+                if (indexSpecial >= 0)
+                    PostMessage(this.selectedWindow, WM_KEYUP, diSpecial[indexSpecial], diSpecial[indexSpecial] << 16 | 0x1);
 
                 PostMessage(this.selectedWindow, WM_KEYUP, key, lval);
 
@@ -367,9 +382,15 @@ namespace AutoKeyboardClick
 
                 Thread.Sleep(10);
 
+                if (indexSpecial >= 0)
+                    keybd_event((Byte)vkSpecial[indexSpecial], 0, KEYEVENTF_KEYDOWN, 0);
+
                 keybd_event(keyByte, 0, KEYEVENTF_KEYDOWN, 0);
 
                 Thread.Sleep(10);
+
+                if (indexSpecial >= 0)
+                    keybd_event((Byte)vkSpecial[indexSpecial], 0, KEYEVENTF_KEYUP, 0);
 
                 keybd_event(keyByte, 0, KEYEVENTF_KEYUP, 0);
 
@@ -390,7 +411,6 @@ namespace AutoKeyboardClick
                 totalDelay += Int32.Parse(tbMinutes.Text) * 1000 * 60;
 
                 this.delay = totalDelay;
-                
             }
             catch
             {
@@ -398,20 +418,7 @@ namespace AutoKeyboardClick
             }
         }
 
-        public bool isFormFocused()
-        {
-            IntPtr handle = GetForegroundWindow();
-
-            int len = this.Text.Length + 1;
-
-            StringBuilder text = new StringBuilder(len);
-
-            GetWindowText(handle, text, len);
-
-            return this.Text.Equals(text.ToString());
-        }
-
-        public void threadHandler()
+        public void threadPressKeys()
         {
             int value = 0;
 
@@ -424,14 +431,13 @@ namespace AutoKeyboardClick
             {
                 while (pressing)
                 {
-                    if(!isFormFocused())
-                        pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
+                    pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
                 }
             }
 
             else
             {
-                for (int i = 0; i < this.repeats && pressing && !isFormFocused(); i++)
+                for (int i = 0; i < this.repeats && pressing; i++)
                 {
                     pressKey(this.selectedWindow, (int)this.selectedKey, value, this.delay);
                 }
@@ -455,22 +461,21 @@ namespace AutoKeyboardClick
 
             this.selectedKey = cbKeys.SelectedItem.ToString()[0];
 
-            threadPressing = new Thread(threadHandler);
+            threadPressing = new Thread(threadPressKeys);
             threadPressing.Start();
         }
 
         public void DoMouseClick()
         {
-            //Call the imported function with the cursor's current position
             uint X = (uint)Cursor.Position.X;
             uint Y = (uint)Cursor.Position.Y;
+
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
         }
 
         private void btnStart_Click(object sender, EventArgs e)
         {
             startPressing();
-            //lblError.Text = Screen.PrimaryScreen.WorkingArea.Width + " " + pbBlack.Location.X + " " + pbBlack.Width + " " + this.Location;
         }
 
         private void btnStop_Click(object sender, EventArgs e)
@@ -478,7 +483,7 @@ namespace AutoKeyboardClick
             reset();
         }
 
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        private void textBoxDelay_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
@@ -512,9 +517,9 @@ namespace AutoKeyboardClick
             lblFound.Text = "No target window";
         }
 
-        private void lblFound_Click(object sender, EventArgs e)
+        private void cbSpecial_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            this.selectedSpecial = cbSpecial.SelectedIndex;
         }
     }
 }
