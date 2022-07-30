@@ -1,7 +1,7 @@
-# Auto Keyboard Click
+<h1 align="center"> Auto Keyboard Click </h1>
 
-Created for personal needs.</br></br>
 ## Generally </br>
+* Created for personal needs.</br></br>
 * The Auto Keyboard Clicker gives you the option to simulate key presses</br>
 thru Windows API for a chosen amount of times every chosen amount of milliseconds.</br>
 
